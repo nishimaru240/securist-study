@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>SecuriST 試験対策</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0f172a;
+      --surface:   #1e293b;
+      --border:    #334155;
+      --text:      #e2e8f0;
+      --muted:     #94a3b8;
+      --accent:    #38bdf8;
+      --star:      #fbbf24;
+      --danger:    #f87171;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      font-size: 16px;
+      line-height: 1.7;
+    }
+    body.font-sm { font-size: 14px; }
+    body.font-lg { font-size: 19px; }
+
+    /* ── HEADER ── */
+    .header {
+      height: 52px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .btn-icon {
+      background: none;
+      border: none;
+      color: var(--text);
+      font-size: 22px;
+      cursor: pointer;
+      padding: 6px;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+    .breadcrumb {
+      flex: 1;
+      font-size: 13px;
+      color: var(--muted);
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+    .btn-font {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      border-radius: 6px;
+      padding: 4px 9px;
+      font-size: 12px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    /* ── SLIDE AREA ── */
+    .slide-area {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 18px 8px;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .slide-area h1 {
+      font-size: 1.35em;
+      color: var(--accent);
+      margin-bottom: 16px;
+      line-height: 1.4;
+    }
+    .slide-area h2 {
+      font-size: 1.1em;
+      color: var(--accent);
+      margin: 14px 0 8px;
+    }
+    .slide-area p { margin-bottom: 12px; }
+    .slide-area ul, .slide-area ol {
+      padding-left: 1.5em;
+      margin-bottom: 12px;
+    }
+    .slide-area li { margin-bottom: 6px; }
+    .slide-area strong { color: #fff; }
+    .slide-area table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 14px;
+      font-size: 0.88em;
+    }
+    .slide-area th {
+      background: var(--surface);
+      padding: 8px 10px;
+      border: 1px solid var(--border);
+      text-align: left;
+      font-weight: bold;
+    }
+    .slide-area td {
+      padding: 7px 10px;
+      border: 1px solid var(--border);
+    }
+    .slide-area tr:nth-child(even) td { background: rgba(255,255,255,0.03); }
+    .slide-area code {
+      background: var(--surface);
+      padding: 1px 5px;
+      border-radius: 4px;
+      font-size: 0.88em;
+    }
+    .slide-area pre {
+      background: var(--surface);
+      padding: 12px;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin-bottom: 12px;
+    }
+    .slide-area pre code { background: none; padding: 0; font-size: 0.9em; }
+    .slide-area blockquote {
+      border-left: 3px solid var(--accent);
+      padding-left: 12px;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+    .slide-area hr { border: none; border-top: 1px solid var(--border); margin: 12px 0; }
+
+    .star-mark { color: var(--star); }
+
+    /* ── NAV BAR ── */
+    .nav-bar {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 10px 12px 12px;
+      flex-shrink: 0;
+    }
+
+    /* interval settings (hidden by default) */
+    .interval-row {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+      padding: 8px 10px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+    }
+    .interval-row.visible { display: flex; }
+    .interval-row label { font-size: 13px; color: var(--muted); flex-shrink: 0; }
+    .interval-row input[type="range"] {
+      flex: 1;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+    .interval-val { font-size: 13px; color: var(--text); min-width: 36px; text-align: right; }
+
+    /* main controls */
+    .nav-controls {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-nav {
+      background: var(--border);
+      border: none;
+      color: var(--text);
+      border-radius: 10px;
+      height: 52px;
+      min-width: 60px;
+      font-size: 20px;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: background 0.15s;
+    }
+    .btn-nav:active  { background: var(--accent); color: #000; }
+    .btn-nav:disabled { opacity: 0.3; cursor: default; }
+
+    .slide-counter {
+      flex: 1;
+      text-align: center;
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    .btn-gear {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      border-radius: 10px;
+      height: 52px;
+      width: 44px;
+      font-size: 18px;
+      cursor: pointer;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .btn-gear.active { color: var(--accent); border-color: var(--accent); }
+
+    .btn-auto {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      border-radius: 10px;
+      height: 52px;
+      padding: 0 14px;
+      font-size: 14px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s;
+    }
+    .btn-auto.running {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* progress + countdown */
+    .progress-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 8px;
+    }
+    .progress-bar {
+      flex: 1;
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 2px;
+      transition: width 0.3s;
+    }
+    .countdown {
+      font-size: 12px;
+      color: var(--muted);
+      min-width: 28px;
+      text-align: right;
+    }
+
+    /* ── TOC DRAWER ── */
+    .toc-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.55);
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s;
+    }
+    .toc-overlay.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .toc-drawer {
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      width: min(300px, 85vw);
+      background: var(--surface);
+      overflow-y: auto;
+      z-index: 101;
+      transform: translateX(-100%);
+      transition: transform 0.25s ease;
+    }
+    .toc-overlay.visible .toc-drawer { transform: translateX(0); }
+
+    .toc-header {
+      padding: 16px;
+      font-weight: bold;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      background: var(--surface);
+    }
+    .toc-close {
+      background: none;
+      border: none;
+      color: var(--text);
+      font-size: 20px;
+      cursor: pointer;
+    }
+    .toc-chapter-label {
+      padding: 12px 16px 4px;
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 0.05em;
+    }
+    .toc-item {
+      display: block;
+      padding: 11px 16px;
+      font-size: 14px;
+      color: var(--text);
+      cursor: pointer;
+      border-left: 3px solid transparent;
+      line-height: 1.4;
+    }
+    .toc-item:hover    { background: rgba(255,255,255,0.05); }
+    .toc-item.active   { border-left-color: var(--accent); color: var(--accent); }
+
+    /* ── LOADING / ERROR ── */
+    .status-msg {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      flex: 1;
+      gap: 12px;
+      color: var(--muted);
+      padding: 20px;
+      text-align: center;
+      font-size: 14px;
+    }
+
+    /* ── LANDSCAPE ── */
+    @media (orientation: landscape) {
+      .slide-area { max-width: 700px; margin: 0 auto; width: 100%; }
+    }
+  </style>
+</head>
+<body class="font-md">
+
+<!-- TOC Overlay -->
+<div class="toc-overlay" id="tocOverlay">
+  <div class="toc-drawer">
+    <div class="toc-header">
+      <span>目次</span>
+      <button class="toc-close" id="tocClose">✕</button>
+    </div>
+    <div id="tocList"></div>
+  </div>
+</div>
+
+<!-- Header -->
+<div class="header">
+  <button class="btn-icon" id="btnMenu" title="目次">☰</button>
+  <div class="breadcrumb" id="breadcrumb">読み込み中...</div>
+  <button class="btn-font" id="btnFont" title="文字サイズ">文字</button>
+</div>
+
+<!-- Slide -->
+<div class="slide-area" id="slideArea">
+  <div class="status-msg">読み込み中...</div>
+</div>
+
+<!-- Nav -->
+<div class="nav-bar">
+  <div class="interval-row" id="intervalRow">
+    <label for="intervalSlider">間隔</label>
+    <input type="range" id="intervalSlider" min="5" max="120" step="5" value="25">
+    <span class="interval-val" id="intervalVal">25秒</span>
+  </div>
+  <div class="nav-controls">
+    <button class="btn-nav" id="btnPrev" disabled>◀</button>
+    <div class="slide-counter" id="slideCounter">- / -</div>
+    <button class="btn-gear" id="btnGear" title="間隔設定">⚙</button>
+    <button class="btn-auto" id="btnAuto">自動</button>
+    <button class="btn-nav" id="btnNext" disabled>▶</button>
+  </div>
+  <div class="progress-row">
+    <div class="progress-bar">
+      <div class="progress-fill" id="progressFill" style="width:0%"></div>
+    </div>
+    <div class="countdown" id="countdown"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/marked@9/marked.min.js"></script>
+<script>
+// ── State ──────────────────────────────────────────────────────
+const state = {
+  slides:     [],   // [{ chapterTitle, html }]
+  current:    0,
+  autoOn:     false,
+  interval:   25,
+  autoTimer:  null,
+  cdTimer:    null,
+  cdRemain:   0,
+  fontLevel:  1,    // 0=sm 1=md 2=lg
+};
+
+const FONT_CLASSES  = ['font-sm', 'font-md', 'font-lg'];
+const STORAGE_POS   = 'securist_pos';
+const STORAGE_FONT  = 'securist_font';
+const STORAGE_ITVL  = 'securist_interval';
+
+// ── DOM ────────────────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+const slideArea    = $('slideArea');
+const breadcrumb   = $('breadcrumb');
+const slideCounter = $('slideCounter');
+const progressFill = $('progressFill');
+const countdownEl  = $('countdown');
+const btnPrev      = $('btnPrev');
+const btnNext      = $('btnNext');
+const btnAuto      = $('btnAuto');
+const btnGear      = $('btnGear');
+const btnMenu      = $('btnMenu');
+const btnFont      = $('btnFont');
+const tocOverlay   = $('tocOverlay');
+const tocList      = $('tocList');
+const intervalRow  = $('intervalRow');
+const intervalSlider = $('intervalSlider');
+const intervalVal  = $('intervalVal');
+
+// ── Markdown parsing ───────────────────────────────────────────
+function parseSlides(md, chapterTitle) {
+  return md
+    .split(/^---$/m)
+    .map(s => s.trim())
+    .filter(s => s.length > 0)
+    .map(seg => {
+      const html = marked.parse(seg)
+        .replace(/★/g, '<span class="star-mark">★</span>');
+      return { chapterTitle, html };
+    });
+}
+
+// ── Load content ───────────────────────────────────────────────
+async function loadContent() {
+  try {
+    const res = await fetch('content/index.json');
+    if (!res.ok) throw new Error(`index.json: ${res.status}`);
+    const chapters = await res.json();
+
+    const all = [];
+    for (const ch of chapters) {
+      const r = await fetch(ch.file);
+      if (!r.ok) throw new Error(`${ch.file}: ${r.status}`);
+      all.push(...parseSlides(await r.text(), ch.title));
+    }
+
+    if (all.length === 0) throw new Error('スライドが見つかりません');
+    state.slides = all;
+    buildToc();
+    restoreSettings();
+    render();
+  } catch (e) {
+    slideArea.innerHTML = `
+      <div class="status-msg">
+        <div style="font-size:32px">⚠️</div>
+        <div style="color:var(--danger)">読み込み失敗</div>
+        <div>${e.message}</div>
+        <div style="font-size:12px;color:var(--muted)">
+          ローカルで開く場合は Live Server などを経由してください。
+        </div>
+      </div>`;
+  }
+}
+
+// ── Render ─────────────────────────────────────────────────────
+function render() {
+  const { slides, current } = state;
+  const slide = slides[current];
+
+  slideArea.innerHTML = slide.html;
+  slideArea.scrollTop = 0;
+
+  breadcrumb.textContent = slide.chapterTitle;
+  slideCounter.textContent = `${current + 1} / ${slides.length}`;
+  progressFill.style.width = `${((current + 1) / slides.length) * 100}%`;
+
+  btnPrev.disabled = current === 0;
+  btnNext.disabled = current === slides.length - 1;
+
+  document.querySelectorAll('.toc-item').forEach((el, i) => {
+    el.classList.toggle('active', i === current);
+  });
+
+  localStorage.setItem(STORAGE_POS, current);
+}
+
+// ── Navigation ─────────────────────────────────────────────────
+function goTo(index) {
+  const clamped = Math.max(0, Math.min(index, state.slides.length - 1));
+  if (clamped === state.current && state.slides.length > 0) return;
+  state.current = clamped;
+  render();
+  if (state.autoOn) resetCountdown();
+}
+
+btnPrev.addEventListener('click', () => goTo(state.current - 1));
+btnNext.addEventListener('click', () => goTo(state.current + 1));
+
+// swipe
+let swipeX = 0;
+slideArea.addEventListener('touchstart', e => { swipeX = e.touches[0].clientX; }, { passive: true });
+slideArea.addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].clientX - swipeX;
+  if (Math.abs(dx) > 50) goTo(state.current + (dx < 0 ? 1 : -1));
+});
+
+// keyboard
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown')  goTo(state.current + 1);
+  if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')    goTo(state.current - 1);
+  if (e.key === ' ') { e.preventDefault(); state.autoOn ? stopAuto() : startAuto(); }
+});
+
+// ── Auto advance ───────────────────────────────────────────────
+function startAuto() {
+  if (!state.slides.length) return;
+  state.autoOn = true;
+  btnAuto.textContent = '■ 停止';
+  btnAuto.classList.add('running');
+  resetCountdown();
+}
+
+function stopAuto() {
+  state.autoOn = false;
+  btnAuto.textContent = '自動';
+  btnAuto.classList.remove('running');
+  clearTimeout(state.autoTimer);
+  clearInterval(state.cdTimer);
+  countdownEl.textContent = '';
+  state.autoTimer = null;
+  state.cdTimer   = null;
+}
+
+function resetCountdown() {
+  clearTimeout(state.autoTimer);
+  clearInterval(state.cdTimer);
+
+  state.cdRemain = state.interval;
+  countdownEl.textContent = state.cdRemain + 's';
+
+  state.cdTimer = setInterval(() => {
+    state.cdRemain--;
+    countdownEl.textContent = state.cdRemain > 0 ? state.cdRemain + 's' : '';
+    if (state.cdRemain <= 0) clearInterval(state.cdTimer);
+  }, 1000);
+
+  state.autoTimer = setTimeout(() => {
+    if (state.current < state.slides.length - 1) {
+      goTo(state.current + 1);
+    } else {
+      stopAuto();
+    }
+  }, state.interval * 1000);
+}
+
+btnAuto.addEventListener('click', () => state.autoOn ? stopAuto() : startAuto());
+
+// ── Gear (interval settings) ───────────────────────────────────
+btnGear.addEventListener('click', () => {
+  intervalRow.classList.toggle('visible');
+  btnGear.classList.toggle('active', intervalRow.classList.contains('visible'));
+});
+
+intervalSlider.addEventListener('input', () => {
+  state.interval = +intervalSlider.value;
+  intervalVal.textContent = state.interval + '秒';
+  localStorage.setItem(STORAGE_ITVL, state.interval);
+  if (state.autoOn) resetCountdown();
+});
+
+// ── Font size ──────────────────────────────────────────────────
+btnFont.addEventListener('click', () => {
+  state.fontLevel = (state.fontLevel + 1) % 3;
+  document.body.className = FONT_CLASSES[state.fontLevel];
+  localStorage.setItem(STORAGE_FONT, state.fontLevel);
+});
+
+// ── TOC ────────────────────────────────────────────────────────
+function buildToc() {
+  let lastChapter = '';
+  state.slides.forEach((slide, i) => {
+    if (slide.chapterTitle !== lastChapter) {
+      lastChapter = slide.chapterTitle;
+      const label = document.createElement('div');
+      label.className = 'toc-chapter-label';
+      label.textContent = slide.chapterTitle;
+      tocList.appendChild(label);
+    }
+
+    const tmp = document.createElement('div');
+    tmp.innerHTML = slide.html;
+    const h1 = tmp.querySelector('h1');
+    const title = h1 ? h1.textContent.replace('★', '') : `スライド ${i + 1}`;
+
+    const item = document.createElement('div');
+    item.className = 'toc-item';
+    item.textContent = title.trim();
+    item.addEventListener('click', () => { goTo(i); closeToc(); });
+    tocList.appendChild(item);
+  });
+}
+
+function closeToc() { tocOverlay.classList.remove('visible'); }
+
+btnMenu.addEventListener('click', () => tocOverlay.classList.add('visible'));
+tocOverlay.addEventListener('click', e => { if (e.target === tocOverlay) closeToc(); });
+$('tocClose').addEventListener('click', closeToc);
+
+// ── Restore saved settings ─────────────────────────────────────
+function restoreSettings() {
+  const pos   = localStorage.getItem(STORAGE_POS);
+  const font  = localStorage.getItem(STORAGE_FONT);
+  const itvl  = localStorage.getItem(STORAGE_ITVL);
+
+  if (pos  !== null) state.current   = Math.min(+pos,  state.slides.length - 1);
+  if (font !== null) state.fontLevel = +font;
+  if (itvl !== null) {
+    state.interval = +itvl;
+    intervalSlider.value = state.interval;
+    intervalVal.textContent = state.interval + '秒';
+  }
+
+  document.body.className = FONT_CLASSES[state.fontLevel];
+}
+
+// ── Boot ───────────────────────────────────────────────────────
+loadContent();
+</script>
+</body>
+</html>
