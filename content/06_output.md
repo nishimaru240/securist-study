@@ -113,7 +113,7 @@ cursor.execute("SELECT * FROM users WHERE name = %s", (name,))
 ```
 
 - パラメーターとSQL構造を分離して送るため、入力値がSQL構文として解釈されない
-- **フレームワークのORMを使えば自動的にパラメータ化される**
+- **フレームワークのORM**（Object-Relational Mapping：DBのテーブルをプログラムのオブジェクトとして扱える仕組み）**を使えば自動的にパラメータ化される**
 
 **追加の対策**
 - DBアカウントは最小権限にする（アプリ用アカウントにDROP権限を与えない）
@@ -130,7 +130,7 @@ cursor.execute("SELECT * FROM users WHERE name = %s", (name,))
 **安全な設計**
 - APIレスポンスは `Content-Type: application/json` を明示する
 - `<`, `>` をUnicodeエスケープ（`<`, `>`）して出力する
-- JSONPは使わない（CORS対応のAPIに切り替える）
+- JSONP（クロスドメインでJSONを取得する古い手法。`<script>`タグでJSONをJavaScriptとして読み込む）は使わない（CORS対応のAPIに切り替える）
 
 ---
 # OSコマンドインジェクション ★
