@@ -257,6 +257,8 @@
 | WebAuthn | Webブラウザとサーバー間の認証API仕様 |
 | CTAP（Client to Authenticator Protocol） | デバイス（生体認証器・セキュリティキー）との通信仕様 |
 
+> WebAuthnは「ブラウザ↔サーバー」、CTAPは「ブラウザ↔認証デバイス」を担当し、2層で連携してパスワードレス認証を実現する
+
 ---
 # FIDO認証の仕組みと利点
 
