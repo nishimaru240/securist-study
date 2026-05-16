@@ -439,13 +439,13 @@ function parseSlides(md, chapterTitle) {
 // ── Load content ───────────────────────────────────────────────
 async function loadContent() {
   try {
-    const res = await fetch('content/index.json');
+    const res = await fetch('content/index.json', { cache: 'no-cache' });
     if (!res.ok) throw new Error(`index.json: ${res.status}`);
     const chapters = await res.json();
 
     const all = [];
     for (const ch of chapters) {
-      const r = await fetch(ch.file);
+      const r = await fetch(ch.file, { cache: 'no-cache' });
       if (!r.ok) throw new Error(`${ch.file}: ${r.status}`);
       all.push(...parseSlides(await r.text(), ch.title));
     }
