@@ -297,23 +297,36 @@
       font-size: 20px;
       cursor: pointer;
     }
-    .toc-chapter-label {
-      padding: 12px 16px 4px;
-      font-size: 11px;
-      color: var(--muted);
-      letter-spacing: 0.05em;
-    }
-    .toc-item {
-      display: block;
-      padding: 11px 16px;
+    .toc-chapter-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
       font-size: 14px;
+      font-weight: bold;
       color: var(--text);
       cursor: pointer;
       border-left: 3px solid transparent;
       line-height: 1.4;
     }
-    .toc-item:hover    { background: rgba(255,255,255,0.05); }
-    .toc-item.active   { border-left-color: var(--accent); color: var(--accent); }
+    .toc-chapter-header:hover { background: rgba(255,255,255,0.05); }
+    .toc-chapter-header.active { border-left-color: var(--accent); color: var(--accent); }
+    .toc-chapter-arrow { font-size: 11px; color: var(--muted); flex-shrink: 0; }
+
+    .toc-chapter-items { display: none; }
+    .toc-chapter-items.open { display: block; }
+
+    .toc-sub-item {
+      display: block;
+      padding: 8px 16px 8px 28px;
+      font-size: 13px;
+      color: var(--muted);
+      cursor: pointer;
+      border-left: 3px solid transparent;
+      line-height: 1.4;
+    }
+    .toc-sub-item:hover  { background: rgba(255,255,255,0.05); color: var(--text); }
+    .toc-sub-item.active { border-left-color: var(--accent); color: var(--accent); }
 
     /* ── LOADING / ERROR ── */
     .status-msg {
@@ -483,8 +496,11 @@ function render() {
   btnPrev.disabled = current === 0;
   btnNext.disabled = current === slides.length - 1;
 
-  document.querySelectorAll('.toc-item').forEach((el, i) => {
-    el.classList.toggle('active', i === current);
+  document.querySelectorAll('.toc-sub-item').forEach(el => {
+    el.classList.toggle('active', +el.dataset.index === current);
+  });
+  document.querySelectorAll('.toc-chapter-header').forEach(el => {
+    el.classList.toggle('active', el.dataset.chapter === slide.chapterTitle);
   });
 
   localStorage.setItem(STORAGE_POS, current);
@@ -583,32 +599,79 @@ btnFont.addEventListener('click', () => {
 
 // ── TOC ────────────────────────────────────────────────────────
 function buildToc() {
-  let lastChapter = '';
+  const chapters = [];
+  let cur = null;
   state.slides.forEach((slide, i) => {
-    if (slide.chapterTitle !== lastChapter) {
-      lastChapter = slide.chapterTitle;
-      const label = document.createElement('div');
-      label.className = 'toc-chapter-label';
-      label.textContent = slide.chapterTitle;
-      tocList.appendChild(label);
+    if (!cur || slide.chapterTitle !== cur.title) {
+      cur = { title: slide.chapterTitle, slides: [] };
+      chapters.push(cur);
     }
-
     const tmp = document.createElement('div');
     tmp.innerHTML = slide.html;
     const h1 = tmp.querySelector('h1');
-    const title = h1 ? h1.textContent.replace('★', '') : `スライド ${i + 1}`;
+    const title = h1 ? h1.textContent.replace('★', '').trim() : `スライド ${i + 1}`;
+    cur.slides.push({ index: i, title });
+  });
 
-    const item = document.createElement('div');
-    item.className = 'toc-item';
-    item.textContent = title.trim();
-    item.addEventListener('click', () => { goTo(i); closeToc(); });
-    tocList.appendChild(item);
+  chapters.forEach(ch => {
+    const header = document.createElement('div');
+    header.className = 'toc-chapter-header';
+    header.dataset.chapter = ch.title;
+
+    const titleSpan = document.createElement('span');
+    titleSpan.textContent = ch.title;
+
+    const arrow = document.createElement('span');
+    arrow.className = 'toc-chapter-arrow';
+    arrow.textContent = '▶';
+
+    header.appendChild(titleSpan);
+    header.appendChild(arrow);
+
+    const items = document.createElement('div');
+    items.className = 'toc-chapter-items';
+
+    ch.slides.forEach(s => {
+      const item = document.createElement('div');
+      item.className = 'toc-sub-item';
+      item.dataset.index = s.index;
+      item.textContent = s.title;
+      item.addEventListener('click', () => { goTo(s.index); closeToc(); });
+      items.appendChild(item);
+    });
+
+    header.addEventListener('click', () => {
+      const isOpen = items.classList.contains('open');
+      document.querySelectorAll('.toc-chapter-items').forEach(el => el.classList.remove('open'));
+      document.querySelectorAll('.toc-chapter-arrow').forEach(el => el.textContent = '▶');
+      if (!isOpen) {
+        items.classList.add('open');
+        arrow.textContent = '▼';
+      }
+    });
+
+    tocList.appendChild(header);
+    tocList.appendChild(items);
+  });
+}
+
+function expandCurrentChapter() {
+  const title = state.slides[state.current]?.chapterTitle;
+  document.querySelectorAll('.toc-chapter-header').forEach(header => {
+    const items = header.nextElementSibling;
+    const arrow = header.querySelector('.toc-chapter-arrow');
+    const match = header.dataset.chapter === title;
+    items.classList.toggle('open', match);
+    if (arrow) arrow.textContent = match ? '▼' : '▶';
   });
 }
 
 function closeToc() { tocOverlay.classList.remove('visible'); }
 
-btnMenu.addEventListener('click', () => tocOverlay.classList.add('visible'));
+btnMenu.addEventListener('click', () => {
+  tocOverlay.classList.add('visible');
+  expandCurrentChapter();
+});
 tocOverlay.addEventListener('click', e => { if (e.target === tocOverlay) closeToc(); });
 $('tocClose').addEventListener('click', closeToc);
 
