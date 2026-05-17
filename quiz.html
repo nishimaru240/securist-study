@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>SecuriST 予想問題集</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0f172a;
+      --surface:   #1e293b;
+      --border:    #334155;
+      --text:      #e2e8f0;
+      --muted:     #94a3b8;
+      --accent:    #38bdf8;
+      --star:      #fbbf24;
+      --danger:    #f87171;
+      --correct:   #34d399;
+      --wrong:     #f87171;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      font-size: 16px;
+      line-height: 1.7;
+    }
+
+    /* ── HEADER ── */
+    .header {
+      height: 52px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+    .header-title {
+      flex: 1;
+      font-size: 15px;
+      font-weight: bold;
+      color: var(--text);
+    }
+    .header-score {
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .btn-home {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 20px;
+      cursor: pointer;
+      padding: 4px;
+      line-height: 1;
+      text-decoration: none;
+    }
+
+    /* ── MAIN ── */
+    .main {
+      flex: 1;
+      padding: 20px 16px 32px;
+      max-width: 680px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    /* ── PROGRESS ── */
+    .progress-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .progress-bar {
+      flex: 1;
+      height: 6px;
+      background: var(--border);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 3px;
+      transition: width 0.4s;
+    }
+    .progress-label {
+      font-size: 12px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    /* ── QUESTION CARD ── */
+    .q-chapter {
+      font-size: 12px;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 8px;
+    }
+    .q-text {
+      font-size: 1em;
+      line-height: 1.75;
+      margin-bottom: 20px;
+      white-space: pre-wrap;
+    }
+    .q-text code {
+      display: block;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-size: 0.88em;
+      margin-top: 10px;
+      font-family: 'Menlo', 'Consolas', monospace;
+      line-height: 1.5;
+      white-space: pre;
+    }
+
+    /* ── OPTIONS ── */
+    .options {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .opt-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 12px;
+      padding: 14px 16px;
+      font-size: 0.95em;
+      line-height: 1.6;
+      text-align: left;
+      cursor: pointer;
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .opt-btn:not(.answered):hover {
+      border-color: var(--accent);
+      background: rgba(56,189,248,0.07);
+    }
+    .opt-btn.correct {
+      border-color: var(--correct);
+      background: rgba(52,211,153,0.12);
+    }
+    .opt-btn.wrong {
+      border-color: var(--wrong);
+      background: rgba(248,113,113,0.1);
+    }
+    .opt-label {
+      font-weight: bold;
+      flex-shrink: 0;
+      width: 22px;
+    }
+    .opt-btn.correct .opt-label { color: var(--correct); }
+    .opt-btn.wrong   .opt-label { color: var(--wrong); }
+
+    /* ── EXPLANATION ── */
+    .explanation {
+      display: none;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 20px;
+    }
+    .explanation.visible { display: block; }
+    .explanation-head {
+      font-size: 13px;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+    .explanation-head.ok  { color: var(--correct); }
+    .explanation-head.ng  { color: var(--wrong); }
+    .explanation-body {
+      font-size: 0.9em;
+      color: var(--muted);
+      line-height: 1.75;
+    }
+    .explanation-body strong { color: var(--text); }
+
+    /* ── NEXT BUTTON ── */
+    .btn-next {
+      display: none;
+      width: 100%;
+      background: var(--accent);
+      color: #0f172a;
+      border: none;
+      border-radius: 12px;
+      height: 52px;
+      font-size: 1em;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .btn-next.visible { display: block; }
+
+    /* ── RESULT SCREEN ── */
+    .result-screen {
+      display: none;
+      text-align: center;
+      padding: 40px 0;
+    }
+    .result-screen.visible { display: block; }
+    .result-emoji { font-size: 56px; margin-bottom: 16px; }
+    .result-title { font-size: 1.4em; font-weight: bold; margin-bottom: 8px; }
+    .result-score { font-size: 1.1em; color: var(--muted); margin-bottom: 24px; }
+    .result-score span { font-size: 2em; font-weight: bold; color: var(--accent); }
+    .result-detail {
+      background: var(--surface);
+      border-radius: 12px;
+      padding: 16px;
+      text-align: left;
+      margin-bottom: 24px;
+      font-size: 0.9em;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    .result-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 6px 0;
+      border-bottom: 1px solid var(--border);
+      line-height: 1.5;
+    }
+    .result-row:last-child { border-bottom: none; }
+    .result-badge {
+      font-size: 12px;
+      font-weight: bold;
+      padding: 2px 7px;
+      border-radius: 4px;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .result-badge.ok { background: rgba(52,211,153,0.2); color: var(--correct); }
+    .result-badge.ng { background: rgba(248,113,113,0.15); color: var(--wrong); }
+    .result-q-text { color: var(--muted); }
+    .btn-retry {
+      width: 100%;
+      background: var(--border);
+      color: var(--text);
+      border: none;
+      border-radius: 12px;
+      height: 52px;
+      font-size: 1em;
+      cursor: pointer;
+      margin-bottom: 12px;
+    }
+    .btn-retry:hover { background: var(--accent); color: #0f172a; }
+    .btn-home-large {
+      display: block;
+      width: 100%;
+      background: none;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      height: 48px;
+      font-size: 0.95em;
+      cursor: pointer;
+      text-decoration: none;
+      line-height: 48px;
+      text-align: center;
+    }
+
+    @media (orientation: landscape) {
+      .main {
+        padding-left: max(16px, calc((100% - 680px) / 2));
+        padding-right: max(16px, calc((100% - 680px) / 2));
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <a class="btn-home" href="index.html" title="スライドへ戻る">☰</a>
+  <div class="header-title">予想問題集</div>
+  <div class="header-score" id="headerScore">0 / 0</div>
+</div>
+
+<div class="main" id="main">
+  <!-- QUIZ SCREEN -->
+  <div id="quizScreen">
+    <div class="progress-wrap">
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill" style="width:0%"></div>
+      </div>
+      <div class="progress-label" id="progressLabel">1 / 30</div>
+    </div>
+
+    <div class="q-chapter" id="qChapter"></div>
+    <div class="q-text"    id="qText"></div>
+    <div class="options"   id="options"></div>
+
+    <div class="explanation" id="explanation">
+      <div class="explanation-head" id="explanationHead"></div>
+      <div class="explanation-body" id="explanationBody"></div>
+    </div>
+
+    <button class="btn-next" id="btnNext">次の問題 →</button>
+  </div>
+
+  <!-- RESULT SCREEN -->
+  <div class="result-screen" id="resultScreen">
+    <div class="result-emoji" id="resultEmoji"></div>
+    <div class="result-title" id="resultTitle"></div>
+    <div class="result-score" id="resultScore"></div>
+    <div class="result-detail" id="resultDetail"></div>
+    <button class="btn-retry" id="btnRetry">もう一度挑戦する</button>
+    <a class="btn-home-large" href="index.html">スライドに戻る</a>
+  </div>
+</div>
+
+<script>
+const QUESTIONS = [
+  // ──────────────────────────────────────────────
+  // 第1章: セキュリティ要件
+  // ──────────────────────────────────────────────
+  {
+    chapter: "第1章: セキュリティ要件",
+    text: "OWASP Top 10（2021年版）で第1位にランクされた脆弱性カテゴリはどれか。",
+    options: [
+      "インジェクション",
+      "アクセス制御の不備",
+      "セキュリティの設定ミス",
+      "暗号化の失敗"
+    ],
+    correct: 1,
+    explanation: "<strong>アクセス制御の不備（Broken Access Control）</strong>が2021年版で1位になった。2017年版では「インジェクション」が1位だったが、アクセス制御の問題は実際の侵害で最も多く観測される。"
+  },
+  {
+    chapter: "第1章: セキュリティ要件",
+    text: "PCI DSS（Payment Card Industry Data Security Standard）の主な目的として正しいものはどれか。",
+    options: [
+      "個人情報全般の取り扱い基準を定める",
+      "クレジットカード会員データの保護基準を定める",
+      "政府機関のシステム調達要件を定める",
+      "医療情報の電子化規格を定める"
+    ],
+    correct: 1,
+    explanation: "<strong>PCI DSS</strong> はカード業界が策定したセキュリティ基準で、クレジットカード会員データを取り扱うすべての事業者が準拠を求められる。医療情報は HIPAA、個人情報は各国の個人情報保護法が担当する。"
+  },
+  {
+    chapter: "第1章: セキュリティ要件",
+    text: "セキュリティ要件を定義するうえで「多層防御（Defense in Depth）」の考え方として最も適切なものはどれか。",
+    options: [
+      "ファイアウォールを多重に配置してすべての不正通信を遮断する",
+      "単一の強固な対策に集中してリソースを効率化する",
+      "複数の独立した防御層を設け、一層が突破されても他の層で被害を抑える",
+      "外部からの攻撃のみを対象とし、内部脅威は別途対策する"
+    ],
+    correct: 2,
+    explanation: "多層防御は「一つの対策が破られても次の対策が機能する」設計思想。ネットワーク・アプリケーション・データの各層にそれぞれ独立した制御を設ける。"
+  },
+
+  // ──────────────────────────────────────────────
+  // 第2章: 認証
+  // ──────────────────────────────────────────────
+  {
+    chapter: "第2章: 認証",
+    text: "Webアプリケーションでパスワードをデータベースに保存する際の設計として、最も適切なものはどれか。",
+    options: [
+      "パスワードを SHA-256 で1回ハッシュ化して保存する",
+      "パスワードを AES-256 で暗号化して保存し、復号キーは設定ファイルに置く",
+      "ユーザーごとに異なるランダムな salt を付けて bcrypt でハッシュ化し、ハッシュ値と salt を保存する",
+      "パスワード文字列を Base64 エンコードして保存する"
+    ],
+    correct: 2,
+    explanation: "ハッシュは不可逆。<strong>salt</strong> でレインボーテーブル攻撃を無効化し、<strong>bcrypt</strong> のコスト係数で総当たり攻撃に時間をかけさせる。SHA-256 は高速すぎて攻撃に弱い。AES は復号可能なため平文漏洩リスクがある。Base64 はエンコードであり暗号化ではない。"
+  },
+  {
+    chapter: "第2章: 認証",
+    text: "NIST SP800-63B で定義されている認証保証レベル（AAL: Authenticator Assurance Level）の段階数として正しいものはどれか。",
+    options: ["2段階", "3段階", "4段階", "5段階"],
+    correct: 1,
+    explanation: "NIST SP800-63B は <strong>AAL1・AAL2・AAL3 の3段階</strong>を定義している。AAL1 は単要素、AAL2 は多要素、AAL3 は耐フィッシング多要素（ハードウェアキーなど）。"
+  },
+  {
+    chapter: "第2章: 認証",
+    text: "パスワードリセット機能の設計として不適切なものはどれか。",
+    options: [
+      "リセット用 URL は推測困難なトークンを含め、15〜30 分で失効させる",
+      "リセット申請時、登録済み・未登録にかかわらず同一のメッセージを返す",
+      "「該当メールアドレスが登録されていません」と表示してユーザーに知らせる",
+      "リセット完了後は他端末の既存セッションを無効化する"
+    ],
+    correct: 2,
+    explanation: "登録有無を区別したメッセージは<strong>ユーザー列挙攻撃</strong>の温床になる。攻撃者が有効なメールアドレスを特定できてしまう。応答は「登録されているメールアドレスには送信しました」のように統一する。"
+  },
+  {
+    chapter: "第2章: 認証",
+    text: "アカウントロック機能を実装する際に注意すべきリスクとして最も適切なものはどれか。",
+    options: [
+      "ロック中もパスワードハッシュが漏洩する可能性がある",
+      "攻撃者が意図的にロックを発生させてサービス拒否攻撃に悪用できる",
+      "ロック解除メールが盗聴されてアカウントが乗っ取られる",
+      "ロック回数が多いとデータベースの容量が逼迫する"
+    ],
+    correct: 1,
+    explanation: "アカウントロックは正規ユーザーも締め出すため、<strong>DoS 攻撃（サービス妨害）</strong>に悪用される。対策として CAPTCHA・IPレート制限・アカウントロックとは別の通知のみ行う方式などが検討される。"
+  },
+  {
+    chapter: "第2章: 認証",
+    text: "「秘密の質問（Security Question）」による本人確認を採用しない理由として最も適切なものはどれか。",
+    options: [
+      "サーバー側で答えを保管するためストレージを圧迫する",
+      "答えが推測・調査されやすく、本人しか知らない情報とは言えない",
+      "ユーザーが質問を忘れてしまうことが多い",
+      "国際的な法規制によって使用が禁止されている"
+    ],
+    correct: 1,
+    explanation: "「出身中学校」「母親の旧姓」などは SNS や公開情報から<strong>調査・推測</strong>されやすい。NIST SP800-63B も秘密の質問を記憶シークレットとして非推奨にしている。"
+  },
+
+  // ──────────────────────────────────────────────
+  // 第3章: 認可・アクセス制御
+  // ──────────────────────────────────────────────
+  {
+    chapter: "第3章: 認可・アクセス制御",
+    text: "OpenID Connect の認可リクエストに含める `state` パラメータの目的として正しいものはどれか。",
+    options: [
+      "アクセストークンの有効期限を指定する",
+      "CSRF を防ぐため、リクエストとレスポンスの対応を検証する",
+      "ユーザーの権限スコープを示す",
+      "ID トークンの署名アルゴリズムを指定する"
+    ],
+    correct: 1,
+    explanation: "<strong>state</strong> はセッションに保持し、IdP（Identity Provider）から戻ってきた値と照合する。これにより攻撃者が起点となる認可フロー（CSRF）を検出・拒否できる。"
+  },
+  {
+    chapter: "第3章: 認可・アクセス制御",
+    text: "OAuth 2.0 における「アクセストークン」の説明として最も適切なものはどれか。",
+    options: [
+      "ユーザーのパスワードをハッシュ化した値",
+      "サードパーティアプリがリソースサーバーにアクセスするための証明書",
+      "ユーザーの身元を証明する ID トークン",
+      "セッション ID と同義のセキュアなクッキー"
+    ],
+    correct: 1,
+    explanation: "OAuth 2.0 の<strong>アクセストークン</strong>は、リソースオーナー（ユーザー）の代わりにクライアントアプリがリソースサーバーの API を呼び出すための認可証明書。ID トークンは OpenID Connect が追加した概念。"
+  },
+  {
+    chapter: "第3章: 認可・アクセス制御",
+    text: "FIDO2 認証が「フィッシング耐性がある」と言われる理由として最も適切なものはどれか。",
+    options: [
+      "ワンタイムパスワードを使うため毎回異なる値になる",
+      "認証器（Authenticator）が接続先ドメインに紐付いた鍵ペアを使うため、偽サイトでは機能しない",
+      "生体情報はサーバーに送信されないため盗まれない",
+      "SMS や音声通話を使わないためSIMスワップ攻撃を受けない"
+    ],
+    correct: 1,
+    explanation: "FIDO2 は<strong>登録時のオリジン（ドメイン）に束縛された秘密鍵</strong>で署名する。フィッシングサイトは正規ドメインと異なるため、認証器が署名を拒否する。"
+  },
+
+  // ──────────────────────────────────────────────
+  // 第4章: セッション管理
+  // ──────────────────────────────────────────────
+  {
+    chapter: "第4章: セッション管理",
+    text: "セッション ID を格納する Cookie に必ず設定すべき属性の組み合わせとして適切なものはどれか。",
+    options: [
+      "Secure ＋ HttpOnly ＋ SameSite=Strict または Lax",
+      "HttpOnly ＋ SameSite=None",
+      "Secure ＋ Domain=.example.com ＋ Path=/",
+      "Expires の長期設定 ＋ HttpOnly"
+    ],
+    correct: 0,
+    explanation: "<strong>HttpOnly</strong>（JS からのアクセス遮断→XSS 対策）、<strong>Secure</strong>（HTTPS 限定送信→盗聴対策）、<strong>SameSite=Strict/Lax</strong>（クロスサイトリクエストでの送信制限→CSRF 対策）の3つをセットで設定する。"
+  },
+  {
+    chapter: "第4章: セッション管理",
+    text: "セッション固定攻撃（Session Fixation）を防ぐための対策として最も適切なものはどれか。",
+    options: [
+      "セッション ID を URL パラメータではなく Cookie で渡す",
+      "ログイン成功後に新しいセッション ID を発行し直す",
+      "セッション ID の長さを 128 ビット以上にする",
+      "ログイン画面に CAPTCHA を設置する"
+    ],
+    correct: 1,
+    explanation: "攻撃者が事前に仕込んだセッション ID を使われないよう、<strong>認証成功後に必ずセッション ID を再発行</strong>する。これによりログイン前後でセッション ID が変わり、固定攻撃が無効化される。"
+  },
+  {
+    chapter: "第4章: セッション管理",
+    text: "CSRF（Cross-Site Request Forgery）対策として最も効果があるものはどれか。",
+    options: [
+      "入力値を HTML エスケープする",
+      "リクエストに含まれるトークンをセッションと照合する",
+      "パスワードをハッシュ化して保存する",
+      "エラーメッセージに詳細情報を含めない"
+    ],
+    correct: 1,
+    explanation: "CSRF トークン方式では、フォームに<strong>セッション固有のランダムトークン</strong>を埋め込み、サーバー側でセッションのトークンと一致するか検証する。攻撃者は正規ページを読み込めないためトークンを取得できない。"
+  },
+  {
+    chapter: "第4章: セッション管理",
+    text: "適切なセッションタイムアウト設計として正しいものはどれか。",
+    options: [
+      "タイムアウトは UX を重視して設定せず、ユーザーが手動でログアウトすれば良い",
+      "絶対タイムアウト（最終操作から一定時間）と相対タイムアウト（セッション開始から一定時間）の両方を設ける",
+      "タイムアウト値はすべてのページで同一にする必要がある",
+      "金融系サービスは 24 時間以上のタイムアウトを設定することが推奨される"
+    ],
+    correct: 1,
+    explanation: "<strong>アイドルタイムアウト</strong>（無操作で一定時間後）と<strong>絶対タイムアウト</strong>（ログインから一定時間）の両方を設けるのがベストプラクティス。高リスク操作は短く、通常操作は利便性とのバランスで設計する。"
+  },
+
+  // ──────────────────────────────────────────────
+  // 第5章: 入力処理
+  // ──────────────────────────────────────────────
+  {
+    chapter: "第5章: 入力処理",
+    text: "クライアント側（ブラウザ）の入力値チェックだけでは不十分な理由として最も適切なものはどれか。",
+    options: [
+      "ブラウザのバージョンによって挙動が異なる",
+      "JavaScript を無効化するか、開発者ツールでチェックを回避できる",
+      "正規表現の書き方が複雑になりミスが起きやすい",
+      "クライアントとサーバーで同じコードを共有できない"
+    ],
+    correct: 1,
+    explanation: "クライアントサイドのバリデーションは<strong>UX 向上</strong>が目的。攻撃者は HTTP クライアントや Burp Suite などで直接リクエストを送れるため、<strong>必ずサーバー側でも検証</strong>が必要。"
+  },
+  {
+    chapter: "第5章: 入力処理",
+    text: "以下のサーバーサイドコードに含まれる脆弱性として最も適切なものはどれか。\n\n<code>sql = \"SELECT * FROM users WHERE name='\" + request.GET['name'] + \"'\"\ncursor.execute(sql)</code>",
+    options: [
+      "クロスサイトスクリプティング（XSS）",
+      "SQL インジェクション",
+      "オープンリダイレクト",
+      "CSRF"
+    ],
+    correct: 1,
+    explanation: "ユーザー入力を SQL 文に<strong>直接連結</strong>している。`name` に `' OR '1'='1` などを入れると SQL の意味が変わる。対策は<strong>プリペアドステートメント（パラメータ化クエリ）</strong>の使用。"
+  },
+  {
+    chapter: "第5章: 入力処理",
+    text: "Mass Assignment 攻撃が発生する原因として正しいものはどれか。",
+    options: [
+      "リクエストパラメータをすべてモデルのプロパティに直接マッピングしている",
+      "SQLクエリにユーザー入力を直接埋め込んでいる",
+      "HTMLレスポンスにユーザー入力をそのまま出力している",
+      "セッションIDをURLに含めている"
+    ],
+    correct: 0,
+    explanation: "<strong>Mass Assignment</strong>（一括代入）攻撃は、フレームワークのモデルへの自動バインド機能を悪用する。例えば `is_admin=true` を追加するだけで権限昇格できてしまう。対策は許可するパラメータを明示的に列挙する（allowlist）。"
+  },
+  {
+    chapter: "第5章: 入力処理",
+    text: "XXE（XML External Entity）インジェクション対策として最も適切なものはどれか。",
+    options: [
+      "XML ファイルの最大サイズを制限する",
+      "XML パーサーの外部エンティティ参照機能を無効化する",
+      "XML を JSON に変換してから処理する",
+      "XML の文字エンコーディングを UTF-8 に統一する"
+    ],
+    correct: 1,
+    explanation: "XXE は XML の外部エンティティ（`<!ENTITY`）を使ってサーバー内部のファイルを読み取ったり SSRF を起こす攻撃。<strong>外部エンティティ参照を無効化</strong>するのが根本対策。"
+  },
+
+  // ──────────────────────────────────────────────
+  // 第6章: 出力処理
+  // ──────────────────────────────────────────────
+  {
+    chapter: "第6章: 出力処理",
+    text: "HTML に出力する際に必ずエスケープすべき文字の組み合わせとして正しいものはどれか。",
+    options: [
+      "< > & \" '",
+      "= + - # @",
+      "( ) [ ] { }",
+      "数字・アルファベット以外の全文字"
+    ],
+    correct: 0,
+    explanation: "HTMLコンテキストでは <strong>&lt; &gt; &amp; &quot; &#39;</strong> が HTML の構造に影響する特殊文字。これらを対応するエンティティ（`&lt;` など）に変換することで XSS を防ぐ。"
+  },
+  {
+    chapter: "第6章: 出力処理",
+    text: "オープンリダイレクト脆弱性の対策として最も効果的なものはどれか。",
+    options: [
+      "リダイレクト先 URL をリクエストパラメータで受け取らず、サーバー側で管理する",
+      "リダイレクト URL に HTTPS を強制する",
+      "リダイレクト前にユーザーに確認ダイアログを表示する",
+      "リクエストの Referer ヘッダーを検証する"
+    ],
+    correct: 0,
+    explanation: "外部 URL をパラメータで受け取ってそのままリダイレクトするのが原因。根本対策は<strong>遷移先を内部の許可リスト（allowlist）で管理</strong>し、外部 URL をパラメータとして受け付けない設計にすること。"
+  },
+  {
+    chapter: "第6章: 出力処理",
+    text: "OS コマンドインジェクション対策として最も適切なものはどれか。",
+    options: [
+      "実行するコマンドをホワイトリストで管理し、ユーザー入力をシェル経由で渡さない",
+      "ユーザー入力の長さを 255 文字以内に制限する",
+      "コマンド実行前にシングルクォートをエスケープする",
+      "コマンド実行権限を管理者権限に昇格させてから実行する"
+    ],
+    correct: 0,
+    explanation: "シェルのメタ文字（`;` `&` `|` など）を使った攻撃を防ぐには、<strong>シェルを経由しない API</strong>（exec 系ではなく引数を配列で渡す形式）を使い、ユーザー入力をコマンド文字列に埋め込まない設計が根本対策。"
+  },
+  {
+    chapter: "第6章: 出力処理",
+    text: "XSS（Cross-Site Scripting）攻撃によって引き起こされる被害として不適切なものはどれか。",
+    options: [
+      "被害者のセッション Cookie を盗み、なりすましログインを行う",
+      "被害者のブラウザからサーバーのデータベースを直接書き換える",
+      "被害者のブラウザで任意の JavaScript を実行する",
+      "被害者をフィッシングサイトへ誘導する"
+    ],
+    correct: 1,
+    explanation: "XSS でブラウザ上で JS が実行されても、<strong>直接データベースにアクセスする手段はない</strong>。サーバー側の処理はサーバーセキュリティが守る。XSS の被害はブラウザ上の情報窃取・操作・フィッシング誘導が主体。"
+  },
+
+  // ──────────────────────────────────────────────
+  // 第7章: HTTPS・暗号化
+  // ──────────────────────────────────────────────
+  {
+    chapter: "第7章: HTTPS・暗号化",
+    text: "Web サーバーで有効化すべき TLS 設定として最も適切なものはどれか。",
+    options: [
+      "TLS 1.0 / 1.1 / 1.2 / 1.3 をすべて有効化する",
+      "TLS 1.2 と 1.3 のみを有効化し、ECDHE による鍵交換と AES-GCM を優先する",
+      "SSL 3.0 を含め下位互換のため広く有効化する",
+      "RSA 鍵交換を必須にして前方秘匿性を高める"
+    ],
+    correct: 1,
+    explanation: "TLS 1.0・1.1 は POODLE・BEAST 等の既知脆弱性があり無効化必須。<strong>ECDHE</strong> は前方秘匿性を提供し、<strong>AES-GCM</strong> は認証付き暗号化（暗号化＋改ざん検知を同時に行う）。RSA 鍵交換は前方秘匿性を持たない。"
+  },
+  {
+    chapter: "第7章: HTTPS・暗号化",
+    text: "HSTS（HTTP Strict Transport Security）を設定する効果として正しいものはどれか。",
+    options: [
+      "サーバー証明書の有効期限を自動更新する",
+      "ブラウザが以降のリクエストを強制的に HTTPS で送信するようになる",
+      "HTTP リクエストを受信した際に自動的に HTTPS にリダイレクトする",
+      "証明書の発行者（CA）を信頼リストに追加する"
+    ],
+    correct: 1,
+    explanation: "<strong>HSTS</strong> は `Strict-Transport-Security` ヘッダーをブラウザが記憶し、以後は http:// でアクセスしようとしても<strong>ブラウザ側で自動的に https:// に書き換える</strong>。最初の HTTP アクセス時の中間者攻撃を防ぐには HSTS プリロードが必要。"
+  },
+  {
+    chapter: "第7章: HTTPS・暗号化",
+    text: "証明書の CAA（Certification Authority Authorization）レコードを DNS に設定する目的として正しいものはどれか。",
+    options: [
+      "証明書の有効期限を自動延長する",
+      "そのドメインの証明書を発行できる CA を制限する",
+      "フィッシングサイトを自動検出してブロックする",
+      "ドメインの DNS ゾーン転送を禁止する"
+    ],
+    correct: 1,
+    explanation: "<strong>CAA レコード</strong>は「このドメインに証明書を発行できる CA はここだけ」と宣言する DNS レコード。不正な CA が偽証明書を発行することを防ぐ追加防衛層になる。"
+  },
+  {
+    chapter: "第7章: HTTPS・暗号化",
+    text: "SPF（Sender Policy Framework）の役割として正しいものはどれか。",
+    options: [
+      "メールの本文が暗号化されていることを保証する",
+      "そのドメインから送信を許可された IP アドレスを DNS で宣言し、なりすましを検出する",
+      "メールの添付ファイルにデジタル署名を付ける",
+      "スパムメールのフィルタリングルールを定義する"
+    ],
+    correct: 1,
+    explanation: "<strong>SPF</strong>（Sender Policy Framework）は、ドメインの DNS に「このドメインのメールを送れる IP はこれ」と登録する仕組み。受信サーバーが送信元 IP と照合し、一致しなければなりすましと判断できる。"
+  },
+
+  // ──────────────────────────────────────────────
+  // 第8章: その他のセキュリティ設計
+  // ──────────────────────────────────────────────
+  {
+    chapter: "第8章: その他のセキュリティ設計",
+    text: "アップロードされたファイルが PHP として実行されることを防ぐ設計として最も効果があるものはどれか。",
+    options: [
+      "ファイル名から .php 拡張子を削除する",
+      "Content-Type ヘッダーで画像系のみ許可する",
+      "ファイルを Web 公開ディレクトリ外に保存し、ダウンロードはアプリ経由にする",
+      "アップロード後にウイルススキャンを実行する"
+    ],
+    correct: 2,
+    explanation: "拡張子や Content-Type は改ざん・偽装が可能。<strong>物理的に Web サーバーが解釈できない場所（公開ディレクトリ外）にファイルを保存</strong>し、ダウンロード要求はアプリが代理取得して返すのが根本対策。"
+  },
+  {
+    chapter: "第8章: その他のセキュリティ設計",
+    text: "エラーメッセージの表示設計として適切なものはどれか。",
+    options: [
+      "デバッグのためにスタックトレースをそのままブラウザに表示する",
+      "ユーザーには汎用的なエラーメッセージを表示し、詳細はサーバーログにのみ記録する",
+      "エラーコードと詳細をすべてレスポンスボディに含める",
+      "エラー内容はユーザーが問い合わせやすいよう具体的に伝える"
+    ],
+    correct: 1,
+    explanation: "スタックトレースや内部パスを表示すると攻撃者の情報収集に利用される。ユーザーへは<strong>汎用メッセージのみ</strong>、詳細はサーバーのログへ記録するのが正しい設計。"
+  },
+  {
+    chapter: "第8章: その他のセキュリティ設計",
+    text: "CORS（Cross-Origin Resource Sharing）の `Access-Control-Allow-Origin: *` を設定した場合の問題として最も適切なものはどれか。",
+    options: [
+      "すべての HTTP メソッドが許可されてしまう",
+      "認証情報（Cookie、Authorization ヘッダー）を含むリクエストまで任意ドメインから許可される",
+      "HTTP と HTTPS の両方からアクセスされる",
+      "プリフライトリクエストが無限ループする"
+    ],
+    correct: 1,
+    explanation: "ワイルドカード `*` は任意のオリジンに許可を与える。本来は自社ドメインのみに限定すべき API が外部ドメインからの JS に呼び出される。なお `*` と `credentials: include` は仕様上併用不可だが、設計の意図を超えた公開になることが問題。"
+  },
+  {
+    chapter: "第8章: その他のセキュリティ設計",
+    text: "クリックジャッキング攻撃を防ぐために設定すべき HTTP レスポンスヘッダーとして正しいものはどれか。",
+    options: [
+      "X-Content-Type-Options: nosniff",
+      "X-Frame-Options: DENY（または Content-Security-Policy: frame-ancestors 'none'）",
+      "Strict-Transport-Security: max-age=31536000",
+      "X-XSS-Protection: 1; mode=block"
+    ],
+    correct: 1,
+    explanation: "クリックジャッキングは攻撃者のサイトが正規サイトを `<iframe>` で透明表示してクリックを誘う攻撃。<strong>X-Frame-Options: DENY</strong> または <strong>CSP の frame-ancestors</strong> でフレーム内への埋め込みを禁止する。"
+  },
+  {
+    chapter: "第8章: その他のセキュリティ設計",
+    text: "セキュアな乱数が必要な場面（セッション ID、トークン生成など）で使うべき乱数生成器として正しいものはどれか。",
+    options: [
+      "メルセンヌ・ツイスタ（MT: Mersenne Twister）などの高速な疑似乱数生成器",
+      "CSPRNG（暗号論的に安全な疑似乱数生成器）",
+      "Unix 時刻をシードにした線形合同法",
+      "Math.random() などの言語標準の乱数関数"
+    ],
+    correct: 1,
+    explanation: "<strong>CSPRNG（Cryptographically Secure Pseudo-Random Number Generator）</strong>は出力から次の値を予測することが計算困難。MT や線形合同法は高速だが予測可能なため、セキュリティ用途には不適切。OS が提供する `/dev/urandom` や `crypto.getRandomValues()` などを使う。"
+  },
+  {
+    chapter: "第8章: その他のセキュリティ設計",
+    text: "Secure SDLC（セキュアソフトウェア開発ライフサイクル）において「設計フェーズ」で行うセキュリティ活動として最も適切なものはどれか。",
+    options: [
+      "本番環境の侵入テスト（ペネトレーションテスト）",
+      "脅威モデリングと攻撃シナリオの洗い出し",
+      "依存ライブラリの脆弱性スキャン（SCA）",
+      "ソースコードの静的解析（SAST）"
+    ],
+    correct: 1,
+    explanation: "<strong>脅威モデリング</strong>は設計段階で「どんな攻撃者が・どんな経路で・何を狙うか」を整理する活動。早期に対策を組み込む（Shift Left）ことでコストを下げられる。侵入テストはリリース前、SAST は実装後が主なタイミング。"
+  }
+];
+
+// ── State ────────────────────────────────────────────────
+let current = 0;
+let answered = false;
+let score = 0;
+const results = [];
+
+// ── DOM ──────────────────────────────────────────────────
+const qChapter      = document.getElementById('qChapter');
+const qText         = document.getElementById('qText');
+const optionsEl     = document.getElementById('options');
+const explanation   = document.getElementById('explanation');
+const explanHead    = document.getElementById('explanationHead');
+const explanBody    = document.getElementById('explanationBody');
+const btnNext       = document.getElementById('btnNext');
+const progressFill  = document.getElementById('progressFill');
+const progressLabel = document.getElementById('progressLabel');
+const headerScore   = document.getElementById('headerScore');
+const quizScreen    = document.getElementById('quizScreen');
+const resultScreen  = document.getElementById('resultScreen');
+const resultEmoji   = document.getElementById('resultEmoji');
+const resultTitle   = document.getElementById('resultTitle');
+const resultScore   = document.getElementById('resultScore');
+const resultDetail  = document.getElementById('resultDetail');
+const btnRetry      = document.getElementById('btnRetry');
+
+// ── Render question ──────────────────────────────────────
+function renderQuestion() {
+  answered = false;
+  explanation.classList.remove('visible');
+  btnNext.classList.remove('visible');
+
+  const q = QUESTIONS[current];
+  const total = QUESTIONS.length;
+
+  qChapter.textContent = q.chapter;
+
+  // テキスト中の <code> タグをそのまま HTML として描画
+  qText.innerHTML = q.text.replace(/\n/g, '<br>');
+
+  progressFill.style.width = `${((current + 1) / total) * 100}%`;
+  progressLabel.textContent = `${current + 1} / ${total}`;
+  headerScore.textContent = `${score} / ${current}`;
+
+  optionsEl.innerHTML = '';
+  const labels = ['a', 'b', 'c', 'd'];
+  q.options.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'opt-btn';
+    btn.innerHTML = `<span class="opt-label">${labels[i]}.</span><span>${opt}</span>`;
+    btn.addEventListener('click', () => selectAnswer(i));
+    optionsEl.appendChild(btn);
+  });
+}
+
+// ── Select answer ────────────────────────────────────────
+function selectAnswer(index) {
+  if (answered) return;
+  answered = true;
+
+  const q = QUESTIONS[current];
+  const correct = index === q.correct;
+  if (correct) score++;
+
+  results.push({ text: q.text.replace(/<[^>]+>/g, '').split('\n')[0], correct });
+
+  const btns = optionsEl.querySelectorAll('.opt-btn');
+  btns.forEach((btn, i) => {
+    btn.classList.add('answered');
+    if (i === q.correct) btn.classList.add('correct');
+    else if (i === index && !correct) btn.classList.add('wrong');
+  });
+
+  explanHead.className = 'explanation-head ' + (correct ? 'ok' : 'ng');
+  explanHead.textContent = correct ? '✓ 正解！' : '✗ 不正解';
+  explanBody.innerHTML = q.explanation;
+  explanation.classList.add('visible');
+
+  btnNext.textContent = current < QUESTIONS.length - 1 ? '次の問題 →' : '結果を見る';
+  btnNext.classList.add('visible');
+
+  headerScore.textContent = `${score} / ${current + 1}`;
+}
+
+// ── Next ─────────────────────────────────────────────────
+btnNext.addEventListener('click', () => {
+  if (current < QUESTIONS.length - 1) {
+    current++;
+    renderQuestion();
+    window.scrollTo(0, 0);
+  } else {
+    showResult();
+  }
+});
+
+// ── Result ───────────────────────────────────────────────
+function showResult() {
+  quizScreen.style.display = 'none';
+  resultScreen.classList.add('visible');
+
+  const total = QUESTIONS.length;
+  const pct = Math.round((score / total) * 100);
+
+  if (pct >= 90)      { resultEmoji.textContent = '🏆'; resultTitle.textContent = '素晴らしい！'; }
+  else if (pct >= 70) { resultEmoji.textContent = '🎉'; resultTitle.textContent = '合格ライン到達！'; }
+  else if (pct >= 50) { resultEmoji.textContent = '📖'; resultTitle.textContent = 'もう少し！'; }
+  else                { resultEmoji.textContent = '💪'; resultTitle.textContent = '復習して再挑戦！'; }
+
+  resultScore.innerHTML = `スコア <span>${score} / ${total}</span>（${pct}%）`;
+
+  resultDetail.innerHTML = results.map((r, i) => {
+    const badge = r.correct
+      ? '<span class="result-badge ok">正解</span>'
+      : '<span class="result-badge ng">不正解</span>';
+    const qShort = r.text.length > 45 ? r.text.slice(0, 45) + '…' : r.text;
+    return `<div class="result-row">${badge}<span class="result-q-text">Q${i+1}. ${qShort}</span></div>`;
+  }).join('');
+
+  window.scrollTo(0, 0);
+}
+
+// ── Retry ────────────────────────────────────────────────
+btnRetry.addEventListener('click', () => {
+  current = 0;
+  score = 0;
+  results.length = 0;
+  resultScreen.classList.remove('visible');
+  quizScreen.style.display = '';
+  renderQuestion();
+  window.scrollTo(0, 0);
+});
+
+// ── Boot ─────────────────────────────────────────────────
+renderQuestion();
+</script>
+</body>
+</html>
