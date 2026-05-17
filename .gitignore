@@ -1,4 +1,5 @@
 ﻿.DS_Store
 Thumbs.db
 docs/github_pages_setup.md
-.claude/settings.local.json
+.claude
+content_review
