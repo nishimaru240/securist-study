@@ -328,6 +328,15 @@
     .toc-sub-item:hover  { background: rgba(255,255,255,0.05); color: var(--text); }
     .toc-sub-item.active { border-left-color: var(--accent); color: var(--accent); }
 
+    .toc-disclaimer {
+      padding: 14px 16px;
+      border-top: 1px solid var(--border);
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+    .toc-disclaimer a { color: var(--accent); }
+
     /* ── LOADING / ERROR ── */
     .status-msg {
       display: flex;
@@ -361,6 +370,11 @@
       <button class="toc-close" id="tocClose">✕</button>
     </div>
     <div id="tocList"></div>
+    <div class="toc-disclaimer">
+      ※本アプリは個人作成の非公式学習補助資料です。<br>
+      「SecuriST®」「セキュリスト®」は GSX の商標です。<br>
+      <a href="https://github.com/nishimaru240/securist-study#免責事項" target="_blank" rel="noopener">免責事項</a>
+    </div>
   </div>
 </div>
 
