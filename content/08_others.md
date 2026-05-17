@@ -113,7 +113,7 @@
 
 | 種類 | 用途 | 例 |
 |------|------|----|
-| 通常の擬似乱数（PRNG） | 統計・ゲーム・UI演出 | `Math.random()`、`rand()` |
+| 通常の疑似乱数（PRNG） | 統計・ゲーム・UI演出 | `Math.random()`、`rand()` |
 | 暗号論的疑似乱数（CSPRNG） | セキュリティ用途すべて | `crypto.randomBytes()`、`SecureRandom` |
 
 **CSPRNG を使うべき場面**
@@ -179,6 +179,8 @@ X-Frame-Options: DENY
 Content-Security-Policy: frame-ancestors 'none'
 ```
 - iframe内への描画自体をブロック
+- `frame-ancestors` は `X-Frame-Options` より表現力が高く（特定ドメインを許可するケースで差が出る）、モダンブラウザでは `frame-ancestors` が優先される
+- **IE11 等の古いブラウザは `frame-ancestors` を解釈しない**ため、両方を設定するのが確実
 
 ---
 # CORS と Access-Control-Allow-Origin ★
@@ -228,10 +230,11 @@ Pragma: no-cache
 
 | 値 | 意味 |
 |---|---|
-| `no-store` | キャッシュに一切保存しない（最も強力。機密ページに必須） |
+| `no-store` | キャッシュに一切保存しない（最も強力。機密ページには**これだけで十分**） |
 | `no-cache` | 保存はするが毎回サーバーに再検証してから使う（変更なしなら304でキャッシュ使用） |
 | `Pragma: no-cache` | HTTP/1.0時代の旧ヘッダー。古いプロキシとの互換性のために併記する |
 
+- `no-store` を設定すれば `no-cache` は不要（`no-store` が指示する「保存しない」に `no-cache` の「再検証」は意味をなさない）。両方を記述しても害はなく、旧プロキシへの念押しとして慣習的に書くケースがある
 - ログイン後のページ・個人情報・取引履歴等には必ず設定する
 - 静的リソース（CSS・画像等）はキャッシュを許可してよい
 
@@ -258,7 +261,7 @@ Pragma: no-cache
 | 環境 | 確認すべき設定 |
 |------|----------------|
 | PHP | `expose_php=Off`、`display_errors=Off`、`allow_url_include=Off` |
-| Java | デシリアライズフィルタの設定、`SecurityManager` 廃止後の代替 |
+| Java | デシリアライズフィルタの設定、SecurityManager は Java 17 で非推奨・将来削除予定（確立した代替なし。JEP 411 参照） |
 | Python | `DEBUG=False`（本番）、`pickle` の使用回避 |
 | Node.js | `--inspect` を本番で開かない、依存の `npm audit` |
 | Ruby on Rails | `config.force_ssl=true`、`secret_key_base` のローテーション |

@@ -203,7 +203,8 @@
 - **SPA（Single Page Application）**：ページ遷移なしにブラウザ内でJavaScriptが動的にUIを更新するWebアプリ。サーバーサイドに秘密鍵を置けないため、`client_secret` を安全に保管できない
 - **PKCE（Proof Key for Code Exchange）**：クライアントが認証要求時にランダムな秘密値を生成し、その秘密値を知っている本人だけが認可コードをトークンに交換できる仕組み。
 
-→ 新規設計では **Authorization Code + PKCE** を使う
+→ 新規設計では **Authorization Code + PKCE** を使う  
+→ **OAuth 2.1（ドラフト）はサーバーサイドWebアプリを含む全クライアントにPKCEを推奨**。`client_secret` があっても認可コード横取り攻撃（PKCE なし時の脆弱性）を防ぐため、PKCE を省略しない設計が推奨される
 
 ---
 # シングルサインオン（SSO）
