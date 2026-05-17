@@ -117,11 +117,6 @@
 
 **クリックジャッキング：透明なiframeで正規サイトを重ね、見えないボタンをクリックさせる攻撃**
 
-【攻撃の仕組み】
-1. 攻撃者サイトが罠ページを用意
-2. 正規サイトを透明なiframeで上に重ねる
-3. ユーザーが「ボタンを押した」つもりで正規サイトの操作を実行してしまう
-
 【対策：X-Frame-Options ヘッダー】
 ```
 X-Frame-Options: DENY
@@ -133,6 +128,7 @@ X-Frame-Options: DENY
 ```
 Content-Security-Policy: frame-ancestors 'none'
 ```
+- iframe内への描画自体をブロック
 
 ---
 # キャッシュ制御
@@ -149,6 +145,12 @@ Cache-Control: no-store, no-cache
 Pragma: no-cache
 ```
 
+| 値 | 意味 |
+|---|---|
+| `no-store` | キャッシュに一切保存しない（最も強力。機密ページに必須） |
+| `no-cache` | 保存はするが毎回サーバーに再検証してから使う（変更なしなら304でキャッシュ使用） |
+| `Pragma: no-cache` | HTTP/1.0時代の旧ヘッダー。古いプロキシとの互換性のために併記する |
+
 - ログイン後のページ・個人情報・取引履歴等には必ず設定する
 - 静的リソース（CSS・画像等）はキャッシュを許可してよい
 
@@ -159,12 +161,12 @@ Pragma: no-cache
 
 | 種類 | 内容 | タイミング |
 |------|------|------------|
-| SAST（静的解析） | ソースコードを解析して脆弱性を検出 | 開発中・CIに組込み |
-| DAST（動的解析） | 稼働中のアプリにリクエストを送って脆弱性を検出 | テスト・ステージング |
+| SAST（Static Application Security Testing・静的解析） | ソースコードを解析して脆弱性を検出 | 開発中・CIに組込み |
+| DAST（Dynamic Application Security Testing・動的解析） | 稼働中のアプリにリクエストを送って脆弱性を検出 | テスト・ステージング |
 | ペネトレーションテスト | 専門家が攻撃者視点で実際に侵入を試みる | リリース前・定期 |
-| 依存ライブラリ診断（SCA） | 使っているOSSライブラリの既知脆弱性を検出 | CI・依存追加時 |
+| SCA（Software Composition Analysis・依存ライブラリ診断） | 使っているOSSライブラリの既知脆弱性を検出 | CI・依存追加時 |
 
-→ **設計時のレビュー＋実装後の自動診断＋定期的なペンテスト**を組み合わせる
+→ **設計時のレビュー＋実装後の自動診断（SAST・DAST）＋定期的なペネトレーションテスト**を組み合わせる
 
 ---
 # セキュリティヘッダーの総まとめ ★
@@ -179,6 +181,8 @@ Pragma: no-cache
 | `Strict-Transport-Security` | `max-age=31536000; includeSubDomains` | HTTPS強制 |
 | `Cache-Control` | `no-store`（機密ページ） | 情報漏洩防止 |
 | `Referrer-Policy` | `no-referrer` または `strict-origin` | リファラー漏洩防止 |
+
+> **リファラー**（Referer）：リンクをクリックしてページ遷移する際にブラウザが自動送信する「遷移元URL」を示すHTTPヘッダー。URLにセッションIDやトークンが含まれていると外部サイトに漏洩する。`no-referrer` は一切送信しない、`strict-origin` はドメイン名のみ送信してパスやクエリを隠す
 
 ---
 # 第8章 まとめ・全体総まとめ ★
