@@ -31,4 +31,4 @@ https://nishimaru240.github.io/securist-study/
 | 第5章 | 入力処理 |
 | 第6章 | 出力処理 |
 | 第7章 | HTTPS・暗号化 |
-| 第8章 | その他 |
+| 第8章 | その他のセキュリティ設計 |
