@@ -559,7 +559,7 @@
       </button>
       <button class="mode-card" id="btnModeMock">
         <div class="mode-card-title"><span class="mode-card-emoji">🎯</span>模試モード（30問）</div>
-        <div class="mode-card-desc">全章からランダム30問を出題。本番形式の練習に。</div>
+        <div class="mode-card-desc">各章から3〜4問ずつバランスよく合計30問を出題。本番形式の練習に。</div>
       </button>
     </div>
     <div class="home-footer">
@@ -761,9 +761,20 @@ function startChapterQuiz(chapterNum) {
 function startMockQuiz() {
   mode = 'mock';
   currentChapter = null;
-  const n = Math.min(30, allQuestions.length);
-  const set = shuffle(allQuestions).slice(0, n);
-  initQuiz(set);
+  const TARGET = 30;
+  const chapters = [...new Set(allQuestions.map(q => q.chapter))].sort((a, b) => a - b);
+  const base = Math.floor(TARGET / chapters.length);          // 8章なら 3
+  const extra = TARGET - base * chapters.length;              // 8章なら 6（=6章だけ4問）
+  const bonusChapters = new Set(shuffle(chapters).slice(0, extra));
+
+  const picked = [];
+  for (const ch of chapters) {
+    const count = base + (bonusChapters.has(ch) ? 1 : 0);
+    const pool = allQuestions.filter(q => q.chapter === ch);
+    picked.push(...shuffle(pool).slice(0, Math.min(count, pool.length)));
+  }
+  // 章をまたいで全体をシャッフル
+  initQuiz(shuffle(picked));
 }
 
 function initQuiz(set) {
