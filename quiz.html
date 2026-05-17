@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>SecuriST 予想問題集</title>
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; min-width: 0; }
 
     :root {
       --bg:        #0f172a;
@@ -20,6 +20,7 @@
       --wrong:     #f87171;
     }
 
+    html, body { width: 100%; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Noto Sans JP', sans-serif;
       background: var(--bg);
@@ -29,6 +30,8 @@
       flex-direction: column;
       font-size: 16px;
       line-height: 1.7;
+      word-break: normal;
+      overflow-wrap: break-word;
     }
 
     /* ── HEADER ── */
@@ -47,29 +50,141 @@
       font-size: 15px;
       font-weight: bold;
       color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     .header-score {
       font-size: 13px;
       color: var(--muted);
+      flex-shrink: 0;
     }
-    .btn-home {
+    .btn-menu {
       background: none;
       border: none;
-      color: var(--muted);
+      color: var(--text);
+      font-size: 22px;
+      cursor: pointer;
+      padding: 6px;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+
+    /* ── TOC DRAWER ── */
+    .toc-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.55);
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s;
+    }
+    .toc-overlay.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .toc-drawer {
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      width: min(340px, 88vw);
+      background: var(--surface);
+      display: flex;
+      flex-direction: column;
+      z-index: 101;
+      transform: translateX(-100%);
+      transition: transform 0.25s ease;
+    }
+    .toc-overlay.visible .toc-drawer { transform: translateX(0); }
+
+    .toc-header {
+      padding: 14px 16px;
+      font-weight: bold;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+      background: var(--surface);
+    }
+    .toc-close {
+      background: none;
+      border: none;
+      color: var(--text);
       font-size: 20px;
       cursor: pointer;
-      padding: 4px;
-      line-height: 1;
-      text-decoration: none;
     }
+    .toc-list { flex: 1; overflow-y: auto; }
+    .toc-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 12px 14px;
+      font-size: 13px;
+      color: var(--text);
+      cursor: pointer;
+      border-left: 3px solid transparent;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      line-height: 1.5;
+    }
+    .toc-item:hover { background: rgba(255,255,255,0.05); }
+    .toc-item.active {
+      border-left-color: var(--accent);
+      background: rgba(56,189,248,0.07);
+    }
+    .toc-num {
+      font-weight: bold;
+      color: var(--muted);
+      flex-shrink: 0;
+      min-width: 28px;
+      font-size: 13px;
+    }
+    .toc-item.active .toc-num { color: var(--accent); }
+    .toc-text-wrap {
+      flex: 1;
+      min-width: 0;
+      overflow-wrap: break-word;
+    }
+    .toc-chapter-name {
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 2px;
+    }
+    .toc-question-excerpt { color: var(--text); }
+    .toc-status {
+      flex-shrink: 0;
+      font-size: 15px;
+      width: 18px;
+      text-align: center;
+      color: var(--muted);
+      font-weight: bold;
+    }
+    .toc-status.ok { color: var(--correct); }
+    .toc-status.ng { color: var(--wrong); }
+
+    .toc-footer {
+      border-top: 1px solid var(--border);
+      padding: 10px 16px;
+      flex-shrink: 0;
+    }
+    .toc-home {
+      display: block;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 13px;
+      padding: 6px 0;
+      text-align: center;
+    }
+    .toc-home:hover { color: var(--accent); }
 
     /* ── MAIN ── */
     .main {
       flex: 1;
       padding: 20px 16px 32px;
-      max-width: 680px;
       width: 100%;
+      max-width: 680px;
       margin: 0 auto;
+      align-self: center;
     }
 
     /* ── PROGRESS ── */
@@ -96,21 +211,23 @@
       font-size: 12px;
       color: var(--muted);
       white-space: nowrap;
+      flex-shrink: 0;
     }
 
     /* ── QUESTION CARD ── */
     .q-chapter {
       font-size: 12px;
       color: var(--accent);
-      text-transform: uppercase;
       letter-spacing: 0.05em;
       margin-bottom: 8px;
+      overflow-wrap: break-word;
     }
     .q-text {
       font-size: 1em;
       line-height: 1.75;
       margin-bottom: 20px;
-      white-space: pre-wrap;
+      overflow-wrap: break-word;
+      word-break: normal;
     }
     .q-text code {
       display: block;
@@ -122,7 +239,8 @@
       margin-top: 10px;
       font-family: 'Menlo', 'Consolas', monospace;
       line-height: 1.5;
-      white-space: pre;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
     }
 
     /* ── OPTIONS ── */
@@ -145,7 +263,9 @@
       display: flex;
       gap: 12px;
       align-items: flex-start;
+      width: 100%;
       transition: border-color 0.15s, background 0.15s;
+      font-family: inherit;
     }
     .opt-btn:not(.answered):hover {
       border-color: var(--accent);
@@ -164,6 +284,11 @@
       flex-shrink: 0;
       width: 22px;
     }
+    .opt-text {
+      flex: 1;
+      min-width: 0;
+      overflow-wrap: break-word;
+    }
     .opt-btn.correct .opt-label { color: var(--correct); }
     .opt-btn.wrong   .opt-label { color: var(--wrong); }
 
@@ -175,6 +300,7 @@
       border-radius: 12px;
       padding: 16px;
       margin-bottom: 20px;
+      overflow-wrap: break-word;
     }
     .explanation.visible { display: block; }
     .explanation-head {
@@ -203,6 +329,7 @@
       font-size: 1em;
       font-weight: bold;
       cursor: pointer;
+      font-family: inherit;
     }
     .btn-next.visible { display: block; }
 
@@ -217,14 +344,20 @@
     .result-title { font-size: 1.4em; font-weight: bold; margin-bottom: 8px; }
     .result-score { font-size: 1.1em; color: var(--muted); margin-bottom: 24px; }
     .result-score span { font-size: 2em; font-weight: bold; color: var(--accent); }
+    .result-note {
+      display: block;
+      font-size: 0.7em;
+      color: var(--muted);
+      margin-top: 6px;
+    }
     .result-detail {
       background: var(--surface);
       border-radius: 12px;
-      padding: 16px;
+      padding: 12px 14px;
       text-align: left;
       margin-bottom: 24px;
       font-size: 0.9em;
-      max-height: 300px;
+      max-height: 320px;
       overflow-y: auto;
     }
     .result-row {
@@ -237,16 +370,23 @@
     }
     .result-row:last-child { border-bottom: none; }
     .result-badge {
-      font-size: 12px;
+      font-size: 11px;
       font-weight: bold;
       padding: 2px 7px;
       border-radius: 4px;
       flex-shrink: 0;
       margin-top: 2px;
+      white-space: nowrap;
     }
-    .result-badge.ok { background: rgba(52,211,153,0.2); color: var(--correct); }
-    .result-badge.ng { background: rgba(248,113,113,0.15); color: var(--wrong); }
-    .result-q-text { color: var(--muted); }
+    .result-badge.ok   { background: rgba(52,211,153,0.2);  color: var(--correct); }
+    .result-badge.ng   { background: rgba(248,113,113,0.15); color: var(--wrong); }
+    .result-badge.skip { background: rgba(148,163,184,0.15); color: var(--muted); }
+    .result-q-text {
+      color: var(--muted);
+      flex: 1;
+      min-width: 0;
+      overflow-wrap: break-word;
+    }
     .btn-retry {
       width: 100%;
       background: var(--border);
@@ -257,6 +397,7 @@
       font-size: 1em;
       cursor: pointer;
       margin-bottom: 12px;
+      font-family: inherit;
     }
     .btn-retry:hover { background: var(--accent); color: #0f172a; }
     .btn-home-large {
@@ -270,22 +411,29 @@
       font-size: 0.95em;
       cursor: pointer;
       text-decoration: none;
-      line-height: 48px;
+      line-height: 46px;
       text-align: center;
-    }
-
-    @media (orientation: landscape) {
-      .main {
-        padding-left: max(16px, calc((100% - 680px) / 2));
-        padding-right: max(16px, calc((100% - 680px) / 2));
-      }
     }
   </style>
 </head>
 <body>
 
+<!-- TOC Drawer -->
+<div class="toc-overlay" id="tocOverlay">
+  <div class="toc-drawer">
+    <div class="toc-header">
+      <span>問題一覧</span>
+      <button class="toc-close" id="tocClose">✕</button>
+    </div>
+    <div class="toc-list" id="tocList"></div>
+    <div class="toc-footer">
+      <a class="toc-home" href="index.html">← スライドに戻る</a>
+    </div>
+  </div>
+</div>
+
 <div class="header">
-  <a class="btn-home" href="index.html" title="スライドへ戻る">☰</a>
+  <button class="btn-menu" id="btnMenu" title="問題一覧">☰</button>
   <div class="header-title">予想問題集</div>
   <div class="header-score" id="headerScore">0 / 0</div>
 </div>
@@ -429,7 +577,7 @@ const QUESTIONS = [
   // ──────────────────────────────────────────────
   {
     chapter: "第3章: 認可・アクセス制御",
-    text: "OpenID Connect の認可リクエストに含める `state` パラメータの目的として正しいものはどれか。",
+    text: "OpenID Connect の認可リクエストに含める state パラメータの目的として正しいものはどれか。",
     options: [
       "アクセストークンの有効期限を指定する",
       "CSRF を防ぐため、リクエストとレスポンスの対応を検証する",
@@ -541,7 +689,7 @@ const QUESTIONS = [
       "CSRF"
     ],
     correct: 1,
-    explanation: "ユーザー入力を SQL 文に<strong>直接連結</strong>している。`name` に `' OR '1'='1` などを入れると SQL の意味が変わる。対策は<strong>プリペアドステートメント（パラメータ化クエリ）</strong>の使用。"
+    explanation: "ユーザー入力を SQL 文に<strong>直接連結</strong>している。`name` に <code>' OR '1'='1</code> などを入れると SQL の意味が変わる。対策は<strong>プリペアドステートメント（パラメータ化クエリ）</strong>の使用。"
   },
   {
     chapter: "第5章: 入力処理",
@@ -553,7 +701,7 @@ const QUESTIONS = [
       "セッションIDをURLに含めている"
     ],
     correct: 0,
-    explanation: "<strong>Mass Assignment</strong>（一括代入）攻撃は、フレームワークのモデルへの自動バインド機能を悪用する。例えば `is_admin=true` を追加するだけで権限昇格できてしまう。対策は許可するパラメータを明示的に列挙する（allowlist）。"
+    explanation: "<strong>Mass Assignment</strong>（一括代入）攻撃は、フレームワークのモデルへの自動バインド機能を悪用する。例えば <code>is_admin=true</code> を追加するだけで権限昇格できてしまう。対策は許可するパラメータを明示的に列挙する（allowlist）。"
   },
   {
     chapter: "第5章: 入力処理",
@@ -565,7 +713,7 @@ const QUESTIONS = [
       "XML の文字エンコーディングを UTF-8 に統一する"
     ],
     correct: 1,
-    explanation: "XXE は XML の外部エンティティ（`<!ENTITY`）を使ってサーバー内部のファイルを読み取ったり SSRF を起こす攻撃。<strong>外部エンティティ参照を無効化</strong>するのが根本対策。"
+    explanation: "XXE は XML の外部エンティティ（<code>&lt;!ENTITY</code>）を使ってサーバー内部のファイルを読み取ったり SSRF を起こす攻撃。<strong>外部エンティティ参照を無効化</strong>するのが根本対策。"
   },
 
   // ──────────────────────────────────────────────
@@ -581,7 +729,7 @@ const QUESTIONS = [
       "数字・アルファベット以外の全文字"
     ],
     correct: 0,
-    explanation: "HTMLコンテキストでは <strong>&lt; &gt; &amp; &quot; &#39;</strong> が HTML の構造に影響する特殊文字。これらを対応するエンティティ（`&lt;` など）に変換することで XSS を防ぐ。"
+    explanation: "HTMLコンテキストでは <strong>&lt; &gt; &amp; &quot; &#39;</strong> が HTML の構造に影響する特殊文字。これらを対応するエンティティ（<code>&amp;lt;</code> など）に変換することで XSS を防ぐ。"
   },
   {
     chapter: "第6章: 出力処理",
@@ -605,7 +753,7 @@ const QUESTIONS = [
       "コマンド実行権限を管理者権限に昇格させてから実行する"
     ],
     correct: 0,
-    explanation: "シェルのメタ文字（`;` `&` `|` など）を使った攻撃を防ぐには、<strong>シェルを経由しない API</strong>（exec 系ではなく引数を配列で渡す形式）を使い、ユーザー入力をコマンド文字列に埋め込まない設計が根本対策。"
+    explanation: "シェルのメタ文字（<code>;</code> <code>&amp;</code> <code>|</code> など）を使った攻撃を防ぐには、<strong>シェルを経由しない API</strong>（exec 系ではなく引数を配列で渡す形式）を使い、ユーザー入力をコマンド文字列に埋め込まない設計が根本対策。"
   },
   {
     chapter: "第6章: 出力処理",
@@ -645,7 +793,7 @@ const QUESTIONS = [
       "証明書の発行者（CA）を信頼リストに追加する"
     ],
     correct: 1,
-    explanation: "<strong>HSTS</strong> は `Strict-Transport-Security` ヘッダーをブラウザが記憶し、以後は http:// でアクセスしようとしても<strong>ブラウザ側で自動的に https:// に書き換える</strong>。最初の HTTP アクセス時の中間者攻撃を防ぐには HSTS プリロードが必要。"
+    explanation: "<strong>HSTS</strong> は <code>Strict-Transport-Security</code> ヘッダーをブラウザが記憶し、以後は http:// でアクセスしようとしても<strong>ブラウザ側で自動的に https:// に書き換える</strong>。最初の HTTP アクセス時の中間者攻撃を防ぐには HSTS プリロードが必要。"
   },
   {
     chapter: "第7章: HTTPS・暗号化",
@@ -701,7 +849,7 @@ const QUESTIONS = [
   },
   {
     chapter: "第8章: その他のセキュリティ設計",
-    text: "CORS（Cross-Origin Resource Sharing）の `Access-Control-Allow-Origin: *` を設定した場合の問題として最も適切なものはどれか。",
+    text: "CORS（Cross-Origin Resource Sharing）の Access-Control-Allow-Origin: * を設定した場合の問題として最も適切なものはどれか。",
     options: [
       "すべての HTTP メソッドが許可されてしまう",
       "認証情報（Cookie、Authorization ヘッダー）を含むリクエストまで任意ドメインから許可される",
@@ -709,7 +857,7 @@ const QUESTIONS = [
       "プリフライトリクエストが無限ループする"
     ],
     correct: 1,
-    explanation: "ワイルドカード `*` は任意のオリジンに許可を与える。本来は自社ドメインのみに限定すべき API が外部ドメインからの JS に呼び出される。なお `*` と `credentials: include` は仕様上併用不可だが、設計の意図を超えた公開になることが問題。"
+    explanation: "ワイルドカード <code>*</code> は任意のオリジンに許可を与える。本来は自社ドメインのみに限定すべき API が外部ドメインからの JS に呼び出される。なお <code>*</code> と <code>credentials: include</code> は仕様上併用不可だが、設計の意図を超えた公開になることが問題。"
   },
   {
     chapter: "第8章: その他のセキュリティ設計",
@@ -721,7 +869,7 @@ const QUESTIONS = [
       "X-XSS-Protection: 1; mode=block"
     ],
     correct: 1,
-    explanation: "クリックジャッキングは攻撃者のサイトが正規サイトを `<iframe>` で透明表示してクリックを誘う攻撃。<strong>X-Frame-Options: DENY</strong> または <strong>CSP の frame-ancestors</strong> でフレーム内への埋め込みを禁止する。"
+    explanation: "クリックジャッキングは攻撃者のサイトが正規サイトを <code>&lt;iframe&gt;</code> で透明表示してクリックを誘う攻撃。<strong>X-Frame-Options: DENY</strong> または <strong>CSP の frame-ancestors</strong> でフレーム内への埋め込みを禁止する。"
   },
   {
     chapter: "第8章: その他のセキュリティ設計",
@@ -733,7 +881,7 @@ const QUESTIONS = [
       "Math.random() などの言語標準の乱数関数"
     ],
     correct: 1,
-    explanation: "<strong>CSPRNG（Cryptographically Secure Pseudo-Random Number Generator）</strong>は出力から次の値を予測することが計算困難。MT や線形合同法は高速だが予測可能なため、セキュリティ用途には不適切。OS が提供する `/dev/urandom` や `crypto.getRandomValues()` などを使う。"
+    explanation: "<strong>CSPRNG（Cryptographically Secure Pseudo-Random Number Generator）</strong>は出力から次の値を予測することが計算困難。MT や線形合同法は高速だが予測可能なため、セキュリティ用途には不適切。OS が提供する <code>/dev/urandom</code> や <code>crypto.getRandomValues()</code> などを使う。"
   },
   {
     chapter: "第8章: その他のセキュリティ設計",
@@ -750,75 +898,91 @@ const QUESTIONS = [
 ];
 
 // ── State ────────────────────────────────────────────────
-let current = 0;
+let current  = 0;
 let answered = false;
-let score = 0;
-const results = [];
+const answers = QUESTIONS.map(() => null);  // null | { index, correct }
+
+const getScore         = () => answers.filter(a => a && a.correct).length;
+const getAnsweredCount = () => answers.filter(a => a !== null).length;
 
 // ── DOM ──────────────────────────────────────────────────
-const qChapter      = document.getElementById('qChapter');
-const qText         = document.getElementById('qText');
-const optionsEl     = document.getElementById('options');
-const explanation   = document.getElementById('explanation');
-const explanHead    = document.getElementById('explanationHead');
-const explanBody    = document.getElementById('explanationBody');
-const btnNext       = document.getElementById('btnNext');
-const progressFill  = document.getElementById('progressFill');
-const progressLabel = document.getElementById('progressLabel');
-const headerScore   = document.getElementById('headerScore');
-const quizScreen    = document.getElementById('quizScreen');
-const resultScreen  = document.getElementById('resultScreen');
-const resultEmoji   = document.getElementById('resultEmoji');
-const resultTitle   = document.getElementById('resultTitle');
-const resultScore   = document.getElementById('resultScore');
-const resultDetail  = document.getElementById('resultDetail');
-const btnRetry      = document.getElementById('btnRetry');
+const $ = id => document.getElementById(id);
+const qChapter      = $('qChapter');
+const qText         = $('qText');
+const optionsEl     = $('options');
+const explanation   = $('explanation');
+const explanHead    = $('explanationHead');
+const explanBody    = $('explanationBody');
+const btnNext       = $('btnNext');
+const progressFill  = $('progressFill');
+const progressLabel = $('progressLabel');
+const headerScore   = $('headerScore');
+const quizScreen    = $('quizScreen');
+const resultScreen  = $('resultScreen');
+const resultEmoji   = $('resultEmoji');
+const resultTitle   = $('resultTitle');
+const resultScore   = $('resultScore');
+const resultDetail  = $('resultDetail');
+const btnRetry      = $('btnRetry');
+const btnMenu       = $('btnMenu');
+const tocOverlay    = $('tocOverlay');
+const tocList       = $('tocList');
+const tocClose      = $('tocClose');
+
+// ── Helpers ──────────────────────────────────────────────
+function plainExcerpt(text, max = 38) {
+  const stripped = text.replace(/<[^>]+>/g, '').split('\n')[0].trim();
+  return stripped.length > max ? stripped.slice(0, max) + '…' : stripped;
+}
+
+function updateHeaderScore() {
+  headerScore.textContent = `${getScore()} / ${getAnsweredCount()}`;
+}
 
 // ── Render question ──────────────────────────────────────
 function renderQuestion() {
-  answered = false;
-  explanation.classList.remove('visible');
-  btnNext.classList.remove('visible');
-
   const q = QUESTIONS[current];
   const total = QUESTIONS.length;
 
   qChapter.textContent = q.chapter;
-
-  // テキスト中の <code> タグをそのまま HTML として描画
   qText.innerHTML = q.text.replace(/\n/g, '<br>');
 
   progressFill.style.width = `${((current + 1) / total) * 100}%`;
   progressLabel.textContent = `${current + 1} / ${total}`;
-  headerScore.textContent = `${score} / ${current}`;
+  updateHeaderScore();
 
   optionsEl.innerHTML = '';
   const labels = ['a', 'b', 'c', 'd'];
   q.options.forEach((opt, i) => {
     const btn = document.createElement('button');
     btn.className = 'opt-btn';
-    btn.innerHTML = `<span class="opt-label">${labels[i]}.</span><span>${opt}</span>`;
+    btn.type = 'button';
+    btn.innerHTML = `<span class="opt-label">${labels[i]}.</span><span class="opt-text">${opt}</span>`;
     btn.addEventListener('click', () => selectAnswer(i));
     optionsEl.appendChild(btn);
   });
+
+  const prev = answers[current];
+  if (prev !== null) {
+    answered = true;
+    applyAnsweredState(prev.index);
+  } else {
+    answered = false;
+    explanation.classList.remove('visible');
+    btnNext.classList.remove('visible');
+  }
+
+  updateTocActive();
 }
 
-// ── Select answer ────────────────────────────────────────
-function selectAnswer(index) {
-  if (answered) return;
-  answered = true;
-
+function applyAnsweredState(selectedIndex) {
   const q = QUESTIONS[current];
-  const correct = index === q.correct;
-  if (correct) score++;
+  const correct = selectedIndex === q.correct;
 
-  results.push({ text: q.text.replace(/<[^>]+>/g, '').split('\n')[0], correct });
-
-  const btns = optionsEl.querySelectorAll('.opt-btn');
-  btns.forEach((btn, i) => {
+  optionsEl.querySelectorAll('.opt-btn').forEach((btn, i) => {
     btn.classList.add('answered');
     if (i === q.correct) btn.classList.add('correct');
-    else if (i === index && !correct) btn.classList.add('wrong');
+    else if (i === selectedIndex && !correct) btn.classList.add('wrong');
   });
 
   explanHead.className = 'explanation-head ' + (correct ? 'ok' : 'ng');
@@ -828,8 +992,20 @@ function selectAnswer(index) {
 
   btnNext.textContent = current < QUESTIONS.length - 1 ? '次の問題 →' : '結果を見る';
   btnNext.classList.add('visible');
+}
 
-  headerScore.textContent = `${score} / ${current + 1}`;
+// ── Select answer ────────────────────────────────────────
+function selectAnswer(index) {
+  if (answered) return;
+  answered = true;
+
+  const q = QUESTIONS[current];
+  const correct = index === q.correct;
+  answers[current] = { index, correct };
+
+  applyAnsweredState(index);
+  updateTocItem(current);
+  updateHeaderScore();
 }
 
 // ── Next ─────────────────────────────────────────────────
@@ -843,27 +1019,101 @@ btnNext.addEventListener('click', () => {
   }
 });
 
+// ── TOC (question list drawer) ───────────────────────────
+function buildToc() {
+  tocList.innerHTML = '';
+  QUESTIONS.forEach((q, i) => {
+    const item = document.createElement('div');
+    item.className = 'toc-item';
+    item.dataset.index = i;
+    item.innerHTML = `
+      <div class="toc-num">Q${i + 1}</div>
+      <div class="toc-text-wrap">
+        <div class="toc-chapter-name">${q.chapter}</div>
+        <div class="toc-question-excerpt">${plainExcerpt(q.text)}</div>
+      </div>
+      <div class="toc-status" data-status></div>
+    `;
+    item.addEventListener('click', () => {
+      current = i;
+      renderQuestion();
+      closeToc();
+      window.scrollTo(0, 0);
+      if (resultScreen.classList.contains('visible')) {
+        resultScreen.classList.remove('visible');
+        quizScreen.style.display = '';
+      }
+    });
+    tocList.appendChild(item);
+  });
+}
+
+function updateTocItem(i) {
+  const item = tocList.querySelector(`.toc-item[data-index="${i}"]`);
+  if (!item) return;
+  const status = item.querySelector('[data-status]');
+  const ans = answers[i];
+  if (ans === null) {
+    status.textContent = '';
+    status.className = 'toc-status';
+  } else if (ans.correct) {
+    status.textContent = '✓';
+    status.className = 'toc-status ok';
+  } else {
+    status.textContent = '✗';
+    status.className = 'toc-status ng';
+  }
+}
+
+function updateTocActive() {
+  tocList.querySelectorAll('.toc-item').forEach((item, i) => {
+    item.classList.toggle('active', i === current);
+  });
+}
+
+function refreshAllTocItems() {
+  for (let i = 0; i < QUESTIONS.length; i++) updateTocItem(i);
+}
+
+function openToc()  {
+  tocOverlay.classList.add('visible');
+  const active = tocList.querySelector('.toc-item.active');
+  if (active) active.scrollIntoView({ block: 'center' });
+}
+function closeToc() { tocOverlay.classList.remove('visible'); }
+
+btnMenu.addEventListener('click', openToc);
+tocClose.addEventListener('click', closeToc);
+tocOverlay.addEventListener('click', e => { if (e.target === tocOverlay) closeToc(); });
+
 // ── Result ───────────────────────────────────────────────
 function showResult() {
   quizScreen.style.display = 'none';
   resultScreen.classList.add('visible');
 
-  const total = QUESTIONS.length;
-  const pct = Math.round((score / total) * 100);
+  const total       = QUESTIONS.length;
+  const correctNum  = getScore();
+  const answeredNum = getAnsweredCount();
+  const pct = answeredNum > 0 ? Math.round((correctNum / answeredNum) * 100) : 0;
 
   if (pct >= 90)      { resultEmoji.textContent = '🏆'; resultTitle.textContent = '素晴らしい！'; }
   else if (pct >= 70) { resultEmoji.textContent = '🎉'; resultTitle.textContent = '合格ライン到達！'; }
   else if (pct >= 50) { resultEmoji.textContent = '📖'; resultTitle.textContent = 'もう少し！'; }
   else                { resultEmoji.textContent = '💪'; resultTitle.textContent = '復習して再挑戦！'; }
 
-  resultScore.innerHTML = `スコア <span>${score} / ${total}</span>（${pct}%）`;
+  const noteHtml = answeredNum < total
+    ? `<span class="result-note">※全 ${total} 問中 ${answeredNum} 問回答</span>`
+    : '';
+  resultScore.innerHTML = `正答 <span>${correctNum} / ${answeredNum}</span>（${pct}%）${noteHtml}`;
 
-  resultDetail.innerHTML = results.map((r, i) => {
-    const badge = r.correct
-      ? '<span class="result-badge ok">正解</span>'
-      : '<span class="result-badge ng">不正解</span>';
-    const qShort = r.text.length > 45 ? r.text.slice(0, 45) + '…' : r.text;
-    return `<div class="result-row">${badge}<span class="result-q-text">Q${i+1}. ${qShort}</span></div>`;
+  resultDetail.innerHTML = answers.map((ans, i) => {
+    const q = QUESTIONS[i];
+    const short = plainExcerpt(q.text, 42);
+    let badge;
+    if (ans === null)         badge = '<span class="result-badge skip">未回答</span>';
+    else if (ans.correct)     badge = '<span class="result-badge ok">正解</span>';
+    else                      badge = '<span class="result-badge ng">不正解</span>';
+    return `<div class="result-row">${badge}<span class="result-q-text">Q${i + 1}. ${short}</span></div>`;
   }).join('');
 
   window.scrollTo(0, 0);
@@ -872,8 +1122,8 @@ function showResult() {
 // ── Retry ────────────────────────────────────────────────
 btnRetry.addEventListener('click', () => {
   current = 0;
-  score = 0;
-  results.length = 0;
+  answers.fill(null);
+  refreshAllTocItems();
   resultScreen.classList.remove('visible');
   quizScreen.style.display = '';
   renderQuestion();
@@ -881,6 +1131,7 @@ btnRetry.addEventListener('click', () => {
 });
 
 // ── Boot ─────────────────────────────────────────────────
+buildToc();
 renderQuestion();
 </script>
 </body>
